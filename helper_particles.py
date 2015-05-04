@@ -40,12 +40,12 @@ class Particle:  # Limited to street network.
         self.fid_sec = fid_sec    # numerical: indicates which section of the segment the particle is on
     """
 
-
+    
 # Functions
 
 # In[13]:
 
-def initalize_particles(n,GPS_first):
+def initialize_particles(n,GPS_first):
 
     particles = []    # List of particles (Particle, weight)
     weights = []
@@ -555,6 +555,13 @@ def update_orientation(node_visited, fid,street_network):
 
     return o_new
 
+def sample_particle_with_noise(GPSpoint,sigma_dist):
+    e_new = random.gauss(GPSpoint.e, sigma_dist)
+    n_new = random.gauss(GPSpoint.n, sigma_dist)
+    s_new = random.gauss(GPSpoint.s, sigma_dist)
+    b_new = random.gauss(GPSpoint.b, sigma_dist)
+    
+    return Point(e_new,n_new,s_new,b_new,GPSpoint.dt)
 
 # In[28]:
 
