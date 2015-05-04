@@ -138,9 +138,35 @@ def distance_between_points(a,b):
     return dist
 
 
-# In[17]:
+def particle_filter(S,u,z):
+    """
+    S: a list of particles and their weights [(s_0,w_0),(s_1,w_1),...,(s_n,w_n)]
+    u: time passed from last measurement as datetime.timedelta object
+    z: current GPS reading
+    """
 
-def particle_filter(S,u,z, street_network):
+    particles = []
+    weights = []
+    
+    n = len(S)
+    sigma = 10
+    
+    for i in range(0,n):
+        x,i = weighted_choice(S)
+        x_new = update_particle(x,u,sigma)
+        w_new = update_weight(x_new,z,sigma)
+        particles.append(x_new)
+        weights.append(w_new)  
+        
+    # Normalize weights
+    weights = [i/sum(weights) for i in weights]
+
+    S_new = zip(particles, weights)
+    return S_new
+
+        
+
+def particle_filter_network(S,u,z, street_network):
     """
     S: a list of particles and their weights [(s_0,w_0),(s_1,w_1),...,(s_n,w_n)]
     u: time passed from last measurement as datetime.timedelta object
@@ -702,7 +728,7 @@ def weighted_choice(choices):
 # In[31]:
 
 #get_ipython().magic(u'matplotlib inline')
-def plot_particles(S,GPS_point,street_network,idx=0):
+def plot_particles_network(S,GPS_point,street_network,idx=0):
     """
     Plot particles and the corresponding GPS point. Set idx to -1 if you do not want to save figure.
     """
@@ -744,7 +770,27 @@ def plot_particles(S,GPS_point,street_network,idx=0):
     if idx != -1:
         plt.savefig('results/iterations_sigma10/plot'+str(idx)+'_sigma10.png',dpi=400)
 
+        
+def plot_particles(S, GPS_point):
+    """
+    Plot particles and the corresponding GPS point. 
+    """    
 
+    # Normalize weights for plotting
+    weights = []
+    for particle, weight in S:
+        weights.append(weight)
+        
+    # Colormap settings
+    norm = mpl.colors.Normalize(vmin=0, vmax=max(weights))
+    cmap = cm.coolwarm
+    m = cm.ScalarMappable(norm=norm, cmap=cmap)
+    
+    plt.figure()
+    for i, (particle, weight) in enumerate(S):
+        plt.plot(particle.e, particle.n, 'o',markersize=6, color = m.to_rgba(weight),linewidth=0,markeredgecolor='none')  #weights_normalized[i]*10)
+    plt.plot(GPS_point.e, GPS_point.n, color ='lightgrey', marker = 'o', markersize = 12)
+    
 # In[32]:
 
 def normalize_variable(values):
