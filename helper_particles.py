@@ -65,7 +65,7 @@ def initialize_particles(n,GPS_first):
 
 # In[14]:
 
-def initialize_particles_network(n,GPS_first,measurement_error,street_network):
+def initialize_particles_network(n,GPS_first,measurement_error,street_network, local_segments_search_radius=50):
     
     # Extract starts and ends of each segment
     edge_polylines = street_network[2]
@@ -85,9 +85,14 @@ def initialize_particles_network(n,GPS_first,measurement_error,street_network):
 
     iter_no = 0
 
-    local_inds1 = close_pass_filter(seg_starts, GPS_first, d=50)
-    local_inds2 = close_pass_filter(seg_ends, GPS_first, d=50)
+    local_inds1 = close_pass_filter(seg_starts, GPS_first, d=local_segments_search_radius)
+    local_inds2 = close_pass_filter(seg_ends, GPS_first, d=local_segments_search_radius)
     segments_local = [segments[i] for i in list(Set(np.concatenate((local_inds1,local_inds2))))]
+    
+    # Raise error if no local segments are found
+    if len(segments_local)==0:
+        raise Exception("No local segments found. Increase your search radius.")
+    
     camden_network = street_network[0]
 
     no_particles = 0
@@ -112,6 +117,7 @@ def initialize_particles_network(n,GPS_first,measurement_error,street_network):
                     particle = Particle(fid = segment_fid, distance_from_start = distance_from_start, orientation = orientation, speed = point.s, journey_history = [segment_fid])
 
                     no_particles +=1
+                    
                     particles.append(particle)
                     weights.append(1.0)
                     break
@@ -724,7 +730,27 @@ def weighted_choice(choices):
     assert False, "Shouldn't get here"
 
 
-# In[31]:
+def plot_particle_network(particle,street_network):
+    """
+    Plot particle.
+    """
+    
+    # Unpack street network
+    edge_polylines = street_network[2]
+    
+    # Plot background
+    plt.figure()
+    for segment in edge_polylines.values():
+        coords = zip(*segment)        # zip + * unzips a list!
+        plt.plot(coords[0],coords[1], 'grey')
+
+    # Plot particle 
+    e,n = get_particle_e_n(particle,street_network)
+    plt.plot(e, n, 'o',markersize=6, color = 'red',linewidth=0,markeredgecolor='none')  #weights_normalized[i]*10)
+    plt.xlim(e-50, e+50)
+    plt.ylim(n-50, n+50)
+
+        
 
 #get_ipython().magic(u'matplotlib inline')
 def plot_particles_network(S,GPS_point,street_network,idx=0):
