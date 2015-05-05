@@ -265,7 +265,8 @@ def update_particle_network(x,u,transition_error, street_network, print_on = Fal
     """
 
     # Get time passed in hours
-    t = float(u.seconds)/3600
+    # t = float(u.seconds)/3600
+    t = float(u.seconds)
 
     # Get distance travelled estimate
     distance = t*x.s
@@ -793,7 +794,7 @@ def plot_particles_network(S,GPS_point,street_network,idx=0):
     plt.xlim(min(es)-50, max(es)+50)
     plt.ylim(min(ns)-50, max(ns)+50)
     if idx != -1:
-        plt.savefig('results/iterations_sigma10/plot'+str(idx)+'_sigma10.png',dpi=400)
+        plt.savefig('results/iterations_sigma10_realdata/plot'+str(idx)+'_sigma10.png',dpi=400)
 
         
 def plot_particles(S, GPS_point):
