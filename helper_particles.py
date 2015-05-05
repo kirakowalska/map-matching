@@ -65,7 +65,7 @@ def initialize_particles(n,GPS_first):
 
 # In[14]:
 
-def initialize_particles_network(n,GPS_first,street_network):
+def initialize_particles_network(n,GPS_first,measurement_error,street_network):
     
     # Extract starts and ends of each segment
     edge_polylines = street_network[2]
@@ -95,7 +95,7 @@ def initialize_particles_network(n,GPS_first,street_network):
     while no_particles < n:
         iter_no += 1
         # Sample point
-        point = sample_point_with_noise(GPS_first,10)
+        point = sample_point_with_noise(GPS_first,measurement_error)
 
         # Check if point is on a segment
         for segment_fid in segments_local:
@@ -166,7 +166,7 @@ def particle_filter(S,u,z):
 
         
 
-def particle_filter_network(S,u,z, street_network):
+def particle_filter_network(S,u,z, street_network, measurement_error,transition_error):
     """
     S: a list of particles and their weights [(s_0,w_0),(s_1,w_1),...,(s_n,w_n)]
     u: time passed from last measurement as datetime.timedelta object
@@ -176,7 +176,6 @@ def particle_filter_network(S,u,z, street_network):
     x_base = []
     displacements = []
     weights = []
-    sigma_dist = 10  # affects particle updates, but not particle initialization (which is set to 5m tolerance)
 
     mu = 0
     n = len(S)  # number of particles
@@ -187,18 +186,18 @@ def particle_filter_network(S,u,z, street_network):
     for i in range(0,n):
         x,i = weighted_choice(S)
         samples.append(i)
-        x_new, displacement = update_particle_network(x,u,sigma_dist, street_network)
+        x_new, displacement = update_particle_network(x,u,transition_error, street_network)
         x_base.append((x,displacement)) # store sampled particles + displacement applied (DELETE LATEER)
         displacements.append(displacement)
 
         #x_new = update_particle(x,u,sigma)
         #w_new = update_weight(x_new,z,sigma)
-        w_new = update_weight_network(x_new,z,sigma_dist,street_network)
+        w_new = update_weight_network(x_new,z,measurement_error,street_network)
         particles.append(x_new)
         weights.append(w_new)
 
         if sum(weights)==0:
-            raise Exception("Particles are too unlikely, increase sigma_dist.")
+            raise Exception("Particles are too unlikely, increase measurement_error.")
 
     # Normalize weights
     weights = [i/sum(weights) for i in weights]
@@ -254,7 +253,7 @@ def get_segment_length(segment_fid, street_network):
 
 # In[20]:
 
-def update_particle_network(x,u,sigma_dist, street_network, print_on = False):
+def update_particle_network(x,u,transition_error, street_network, print_on = False):
     """
     Update particle x in response to control u. In our case, u is time passed (datetime.timedelta object).
     """
@@ -278,7 +277,7 @@ def update_particle_network(x,u,sigma_dist, street_network, print_on = False):
         print x_control.h
 
     # Sample new particle with added independent Gaussian noise
-    x_new, displacement = sample_particle_with_noise_network(x_control,sigma_dist,street_network)
+    x_new, displacement = sample_particle_with_noise_network(x_control,transition_error,street_network)
 
     if print_on:
         print "Displaced noisy particle journey"
