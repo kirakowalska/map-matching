@@ -790,7 +790,11 @@ def plot_particles_network(S,GPS_point,street_network,idx=0):
         plt.plot(e, n, 'o',markersize=6, color = m.to_rgba(weight),linewidth=0,markeredgecolor='none')  #weights_normalized[i]*10)
         es.append(e)
         ns.append(n)
-    plt.plot(GPS_point.e, GPS_point.n, color ='lightgrey', marker = 'o', markersize = 12)
+    plt.plot(GPS_point.e, GPS_point.n, color ='lightgrey', marker = 'o', markersize = 12)   
+    es.append(GPS_point.e-250)
+    es.append(GPS_point.e+250)
+    ns.append(GPS_point.n-250)
+    ns.append(GPS_point.n+250)
     plt.xlim(min(es)-50, max(es)+50)
     plt.ylim(min(ns)-50, max(ns)+50)
     if idx != -1:
